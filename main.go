@@ -9,6 +9,7 @@ import (
 	// "log"
 	"math/big"
 	// "net/http"
+	"runtime"
 	"time"
 )
 
@@ -17,7 +18,7 @@ type exp_fn func(*big.Int, *big.Int, *big.Int) *big.Int
 const (
 	HexBase = 16
 	K       = 2048
-	N       = 1000
+	N       = 800
 )
 
 var zero = new(big.Int)
@@ -140,16 +141,19 @@ func benchmark(name string, ms []*big.Int, pow_fn exp_fn) {
 	t := time.Now()
 	for i := 0; i < N; i++ {
 		m := ms[i]
-		s := sign(m, pow_fn)
-		if !verify(m, s, pow_fn) {
-			panic("verify failed")
-		}
+		sign(m, pow_fn)
+		//if !verify(m, s, pow_mod) {
+		//	panic("verify failed")
+		//}
 	}
 	fmt.Println(name, time.Since(t))
 }
 
 func main() {
-	defer profile.Start().Stop()
+	defer profile.Start(profile.ProfilePath(".")).Stop()
+
+	// Ensure only 1 processor used
+	runtime.GOMAXPROCS(1)
 
 	// Create N random numbers in range [0, n)
 	ms := make([]*big.Int, N)
